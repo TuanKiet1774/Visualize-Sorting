@@ -136,9 +136,10 @@ def swap_animation_bubble(array, i, j, ax):
 
 #-------------------------------------------------------------
 # Hàm hợp nhất hai mảng con
-def merge(array, start, mid, end, ax, positions, y_positions):
+def merge(array, start, mid, end, ax, positions, y_positions, order="ascending"):
     left = array[start:mid + 1]
     right = array[mid + 1:end + 1]
+
     l_idx = 0
     r_idx = 0
     sorted_idx = start
@@ -152,13 +153,14 @@ def merge(array, start, mid, end, ax, positions, y_positions):
 
     # Hợp nhất hai mảng con
     while l_idx < len(left) and r_idx < len(right):
-        if left[l_idx] <= right[r_idx]:
+        if (order == "ascending" and left[l_idx] <= right[r_idx]) or \
+           (order == "descending" and left[l_idx] >= right[r_idx]):
             array[sorted_idx] = left[l_idx]
-            highlight = [sorted_idx]  # Highlight phần tử đang được đưa vào vị trí mới
+            highlight = [sorted_idx]
             l_idx += 1
         else:
             array[sorted_idx] = right[r_idx]
-            highlight = [sorted_idx]  # Highlight phần tử đang được đưa vào vị trí mới
+            highlight = [sorted_idx]
             r_idx += 1
 
         # Cập nhật y_positions cho cả hai phần tử đang so sánh
@@ -170,7 +172,7 @@ def merge(array, start, mid, end, ax, positions, y_positions):
     # Copy phần còn lại của mảng con bên trái
     while l_idx < len(left):
         array[sorted_idx] = left[l_idx]
-        y_positions[sorted_idx] += 1  # Đưa giá trị hợp nhất lên hàng trên
+        y_positions[sorted_idx] += 1
         highlight = [sorted_idx]
         draw_array_as_squares(array, ax=ax, highlight=highlight, positions=positions, y_positions=y_positions)
         plt.pause(0.5)
@@ -180,7 +182,7 @@ def merge(array, start, mid, end, ax, positions, y_positions):
     # Copy phần còn lại của mảng con bên phải
     while r_idx < len(right):
         array[sorted_idx] = right[r_idx]
-        y_positions[sorted_idx] += 1  # Đưa giá trị lên hàng trên
+        y_positions[sorted_idx] += 1
         highlight = [sorted_idx]
         draw_array_as_squares(array, ax=ax, highlight=highlight, positions=positions, y_positions=y_positions)
         plt.pause(0.5)
@@ -188,15 +190,12 @@ def merge(array, start, mid, end, ax, positions, y_positions):
         sorted_idx += 1
 
 # Hàm đệ quy cho Merge Sort
-def merge_sort_recursive(array, start, end, ax, positions, y_positions):
+def merge_sort_recursive(array, start, end, ax, positions, y_positions, order="ascending"):
     if start < end:
-        mid = (int)((start + end) / 2)
-        # Tách mảng con bên trái
-        merge_sort_recursive(array, start, mid, ax, positions, y_positions)
-        # Tách mảng con bên phải
-        merge_sort_recursive(array, mid + 1, end, ax, positions, y_positions)
-        # Hợp nhất hai mảng con
-        merge(array, start, mid, end, ax, positions, y_positions)
+        mid = (start + end) // 2
+        merge_sort_recursive(array, start, mid, ax, positions, y_positions, order)
+        merge_sort_recursive(array, mid + 1, end, ax, positions, y_positions, order)
+        merge(array, start, mid, end, ax, positions, y_positions, order)
 
 #-------------------------------------------------------------
 # Hàm vẽ mảng số dưới dạng ô vuông và hiển thị tọa độ
@@ -335,37 +334,39 @@ def move_node(array, i, j, ax_tree, ax_array, n):
         nx.draw_networkx_labels(G, pos=positions, labels=labels, ax=ax_tree, font_size=8, font_color='black')
 
         draw_array(array, n, ax_array)
-        plt.pause(0.05)  # Thời gian tạm dừng giữa mỗi bước di chuyển
+        plt.pause(0.05) 
 
 # Hàm vẽ dãy số
 def draw_array(array, n, ax):
-    ax.clear()  # Xóa nội dung trước khi vẽ lại
+    ax.clear()  
     ax.set_xlim(-1, len(array))
     ax.set_ylim(-1, 2)
     ax.axis('off')
 
     for i in range(len(array)):
-        color = 'red' if i >= n else 'blue'  # Đánh dấu phần tử đã sắp xếp
+        color = 'green' if i >= n else 'blue'  
         rect = patches.Rectangle((i, 0), 1, 1, edgecolor='black', facecolor=color)
         ax.add_patch(rect)
         ax.text(i + 0.5, 0.5, str(array[i]), ha='center', va='center', fontsize=10, color='white')
 
 # Hàm heapify với hiệu ứng di chuyển
-def heapify(array, n, i, ax_tree, ax_array):
+def heapify(array, n, i, ax_tree, ax_array, order="ascending"):
     largest = i
     left = 2 * i + 1
     right = 2 * i + 2
 
-    if left < n and array[left] > array[largest]:
+    # So sánh theo thứ tự tăng dần hoặc giảm dần
+    if left < n and (array[left] > array[largest] if order == "ascending" else array[left] < array[largest]):
         largest = left
 
-    if right < n and array[right] > array[largest]:
+    if right < n and (array[right] > array[largest] if order == "ascending" else array[right] < array[largest]):
         largest = right
 
     if largest != i:
+        # Hiển thị các nút đổi chỗ với hiệu ứng di chuyển
         move_node(array, i, largest, ax_tree, ax_array, n)
         array[i], array[largest] = array[largest], array[i]
         draw_binary_tree(array, ax_tree, n, highlight_root=i, highlight_swap=(i, largest))
         draw_array(array, n, ax_array)
-        plt.pause(1) 
-        heapify(array, n, largest, ax_tree, ax_array)
+        plt.pause(1)  
+        heapify(array, n, largest, ax_tree, ax_array, order)
